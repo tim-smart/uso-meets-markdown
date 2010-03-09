@@ -1,6 +1,6 @@
 # USO, meet GFM. One day Userscripts.org used plain HTML for writing comments and guides,
 # little did he know about a young lass that called herself Github-Flavoured-Markdown.
-# Userscript.org fell madly in love.
+# Userscripts.org fell madly in love.
 
 # ==UserScript==  
 # @name           USO, meet GFM.  
@@ -14,12 +14,12 @@
 
 
   #### Post class
-  # This class represents a post on Userscript.org, usually found in a topic
+  # This class represents a post on Userscripts.org, usually found in a topic
   class Post
     constructor: (element) ->
 
   #### Guide class
-  # Represents a guide on Userscript.org
+  # Represents a guide on Userscripts.org
   class Guide
     constructor: (element) ->
 
