@@ -44,7 +44,7 @@
 
       self: @
       # Practically this is the 'onPostEdit' listener
-      unsafeWindow.EditForm.setReplyId: =>
+      unsafeWindow.EditForm.setReplyId: ->
         oldSetReplyId.apply unsafeWindow.EditForm, arguments
 
         element: document.getElementById 'edit'
