@@ -1,13 +1,13 @@
-# USO, meet GFM. One day Userscripts.org used plain HTML for writing comments and guides,
-# little did he know about a young lass that called herself Github-Flavoured-Markdown.
+# USO, meet Markdown. One day Userscripts.org used plain HTML for writing comments and guides,
+# little did he know about a young lass that called herself Markdown.
 # Userscripts.org fell madly in love.
 
 # ==UserScript==  
-# @name           USO, meet GFM.  
+# @name           USO, meet Markdown.  
 # @namespace      http://userscripts.org/users/tim  
-# @description    GitHub Markdown gets married to Userscript.org  
+# @description    Markdown gets married to Userscript.org  
 # @include        http://userscripts.org/topics/*  
-# @require        http://github.github.com/github-flavored-markdown/scripts/showdown.js  
+# @require        http://userscripts.org/scripts/source/70908.user.js  
 # ==/UserScript==
 
 # Anonymous function wrapper, so we don't step on anyones toes
@@ -17,11 +17,109 @@
   # This class represents a post on Userscripts.org, usually found in a topic
   class Post
     constructor: (element) ->
+      @element: element
+
+    element: null
 
   #### Guide class
   # Represents a guide on Userscripts.org
   class Guide
     constructor: (element) ->
+
+  #### Editor class
+  # Represents the current editor in the page
+  class Editor
+    constructor: (element) ->
+      @element: element
+
+      if 'DIV' is element.nodeName
+        @initFromReply()
+
+    element: null
+
+    # Here we modify the reply box, and over-ride a function on the USO
+    # page that gets called on a edit operation
+    initFromReply: ->
+      oldSetReplyId: unsafeWindow.EditForm.setReplyId
+
+      self: @
+      # Practically this is the 'onPostEdit' listener
+      unsafeWindow.EditForm.setReplyId: =>
+        oldSetReplyId.apply unsafeWindow.EditForm, arguments
+
+        element: document.getElementById 'edit'
+        @modifyEntryContainer element
+
+        textarea: document.getElementById 'edit_post_body'
+        textarea.disabled: true
+
+        window.setTimeout(((textarea, element) ->
+          self.test textarea.value, (markdown) ->
+            if textarea and element
+              textarea.value: markdown
+              textarea.disabled: false
+              form: element.getElementsByTagName('form')[0]
+              form.elements[3].type: 'button'
+              form.elements[3].addEventListener('click', ( ->
+                textarea.value: markdownToHtml.call self, textarea.value
+                unsafeWindow.document.getElementById('edit').
+                                      getElementsByTagName('form')[0].
+                                      submit()), false)
+          textarea.value: 'Converting to markdown...'
+        ), 0, textarea, element)
+
+        self.addShortcuts textarea
+
+      # For the normal reply box
+      @modifyEntryContainer @element
+
+      unsafeWindow.console.log @element
+
+      form: @element.getElementsByTagName('form')[0]
+      textarea: document.getElementById 'post_body'
+
+      form.elements[2].type: 'button'
+      form.elements[2].addEventListener('click', ( ->
+        textarea.value: markdownToHtml textarea.value
+        unsafeWindow.document.getElementById('reply').
+                              getElementsByTagName('form')[0].
+                              submit()), false)
+      @addShortcuts textarea
+
+    modifyEntryContainer: (element) ->
+      element.getElementsByTagName('h5')[1].
+              textContent: 'Use Markdown to format your reply.'
+
+    test: (html, callback) ->
+      htmlToMarkdown html, callback
+
+    addShortcuts: (textarea) ->
+      textarea
+
+  #### Page class
+  # Represents a page on USO, depending on the URI. It will add all
+  # the necessary listeners, insert all the elements, construct all the posts,
+  # the guide if necessary, and generally all the other stuff I missed
+  class Page
+    init: ->
+      path: location.pathname
+
+      if 0 is path.indexOf '/topics'
+        @initFromTopic()
+
+    comments: []
+    editor: null
+
+    # Set-up page from a standard topic.
+    initFromTopic: ->
+      postElements: document.getElementsByClassName('posts')[0].
+                             getElementsByTagName 'tr'
+
+      @editor: new Editor document.getElementById('reply')
+
+      for post in postElements
+        @comments.push new Post(post)
+
 
   #### Parsing functions
 
@@ -33,10 +131,16 @@
   htmlToMarkdown: (html, callback) ->
     GM_xmlhttpRequest {
       method: 'POST'
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
       url: 'http://www.usotools.co.cc/markdown/'
       data: 'html=' + encodeURIComponent html
       onload: (xhr) ->
-        callback xhr.responseText
+        textarea: document.createElement 'textarea'
+        textarea.innerHTML: xhr.responseText
+        callback textarea.value
+        textarea: null
     }
 
   # Takes a string of markdown, and parses it to html
@@ -56,4 +160,10 @@
       style.textContent: css
       head.appendChild style
 
+  # Make sure unsafeWindow is all g
+  `unsafeWindow = 'object' !== typeof unsafeWindow ? window : unsafeWindow`
+
+
+  # Finally start setting up page
+  new Page().init();
 )()
