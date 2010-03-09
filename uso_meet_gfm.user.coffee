@@ -10,8 +10,8 @@
 # @require        http://github.github.com/github-flavored-markdown/scripts/showdown.js  
 # ==/UserScript==
 
+# Anonymous function wrapper, so we don't step on anyones toes
 (->
-
 
   #### Post class
   # This class represents a post on Userscripts.org, usually found in a topic
@@ -23,6 +23,25 @@
   class Guide
     constructor: (element) ->
 
+  #### Parsing functions
+
+  # A instance of showdown
+  showdown: new Showdown.converter()
+
+  # Takes a string of html, and parses it to markdown using
+  # http://github.com/Tim-Smart/usotools-markdownify
+  htmlToMarkdown: (html, callback) ->
+    GM_xmlhttpRequest {
+      method: 'POST'
+      url: 'http://www.usotools.co.cc/markdown/'
+      data: 'html=' + encodeURIComponent html
+      onload: (xhr) ->
+        callback xhr.responseText
+    }
+
+  # Takes a string of markdown, and parses it to html
+  markdownToHtml: (markdown) ->
+    showdown.makeHtml markdown
 
   #### Helper functions
   # A few helper functions that break us away from browser-incompatibility
