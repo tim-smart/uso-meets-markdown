@@ -48,7 +48,7 @@
         oldSetReplyId.apply unsafeWindow.EditForm, arguments
 
         element: document.getElementById 'edit'
-        @modifyEntryContainer element
+        self.modifyEntryContainer element
 
         textarea: document.getElementById 'edit_post_body'
         textarea.disabled: true
