@@ -73,8 +73,6 @@
       # For the normal reply box
       @modifyEntryContainer @element
 
-      unsafeWindow.console.log @element
-
       form: @element.getElementsByTagName('form')[0]
       textarea: document.getElementById 'post_body'
 
@@ -86,13 +84,23 @@
                               submit()), false)
       @addShortcuts textarea
 
+    # This function takes a reply 'containter' div, and chops and changes
+    # it to our liking
     modifyEntryContainer: (element) ->
       element.getElementsByTagName('h5')[1].
               textContent: 'Use Markdown to format your reply.'
 
-    test: (html, callback) ->
-      htmlToMarkdown html, callback
+    # This function takes html, converts it to markdown, then inserts the
+    # resulting quote into the current textarea
+    insertQuote: (html) ->
+      html
 
+    # Opens the reply box, simple.
+    openReply: ->
+
+    # Adds the follow keyboard shortcuts
+    #
+    # * Nothing yet!
     addShortcuts: (textarea) ->
       textarea
 
