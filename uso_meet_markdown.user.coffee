@@ -53,18 +53,24 @@
         textarea: document.getElementById 'edit_post_body'
         textarea.disabled: true
 
+        # Pop back into the sandbox scope, so the leak check
+        # doesn't throw any access violation errors
         window.setTimeout(((textarea, element) ->
+          # Convert the HTML to Markdown
           htmlToMarkdown textarea.value, (markdown) ->
             if textarea and element
               textarea.value: markdown
               textarea.disabled: false
-              form: element.getElementsByTagName('form')[0]
-              form.elements[3].type: 'button'
-              form.elements[3].addEventListener('click', ( ->
-                textarea.value: markdownToHtml.call self, textarea.value
-                unsafeWindow.document.getElementById('edit').
-                                      getElementsByTagName('form')[0].
-                                      submit()), false)
+
+          # Modify the submit button to convert the textarea
+          # content before sending it off to USO
+          form: element.getElementsByTagName('form')[0]
+          form.elements[3].type: 'button'
+          form.elements[3].addEventListener('click', ( ->
+            textarea.value: markdownToHtml textarea.value
+            unsafeWindow.document.getElementById('edit').
+                                  getElementsByTagName('form')[0].
+                                  submit()), false)
           textarea.value: 'Converting to markdown...'
         ), 0, textarea, element)
 
