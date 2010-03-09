@@ -54,7 +54,7 @@
         textarea.disabled: true
 
         window.setTimeout(((textarea, element) ->
-          self.test textarea.value, (markdown) ->
+          htmlToMarkdown textarea.value, (markdown) ->
             if textarea and element
               textarea.value: markdown
               textarea.disabled: false

@@ -38,7 +38,7 @@ page that gets called on a edit operation</p>             </td>             <td 
         <span class="nv">textarea.disabled: </span><span class="kc">true</span>
 
         <span class="nb">window</span><span class="p">.</span><span class="nx">setTimeout</span><span class="p">(((</span><span class="nx">textarea</span><span class="p">,</span> <span class="nx">element</span><span class="p">)</span> <span class="o">-&gt;</span>
-          <span class="nx">self</span><span class="p">.</span><span class="nx">test</span> <span class="nx">textarea</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span> <span class="p">(</span><span class="nx">markdown</span><span class="p">)</span> <span class="o">-&gt;</span>
+          <span class="nx">htmlToMarkdown</span> <span class="nx">textarea</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span> <span class="p">(</span><span class="nx">markdown</span><span class="p">)</span> <span class="o">-&gt;</span>
             <span class="k">if</span> <span class="nx">textarea</span> <span class="o">and</span> <span class="nx">element</span>
               <span class="nv">textarea.value: </span><span class="nx">markdown</span>
               <span class="nv">textarea.disabled: </span><span class="kc">false</span>
