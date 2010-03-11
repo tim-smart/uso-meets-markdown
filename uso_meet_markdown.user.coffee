@@ -8,6 +8,7 @@
 # @description    Markdown gets married to Userscript.org  
 # @include        http://userscripts.org/topics/*  
 # @require        http://userscripts.org/scripts/source/70908.user.js  
+# @require        http://updater.usotools.co.cc/70901.js
 # ==/UserScript==
 
 # Anonymous function wrapper, so we don't step on anyones toes
