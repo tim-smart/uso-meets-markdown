@@ -12,7 +12,7 @@
 # ==/UserScript==
 
 # Some ideas in this script originated from SizzleMcTwizzle's comment fix script: 
-# http://userscripts.org/script/show/24464
+# http://userscripts.org/scripts/show/24464
 #
 # Kudos to him!
 
