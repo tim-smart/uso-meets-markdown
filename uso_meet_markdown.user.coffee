@@ -246,8 +246,8 @@
       @textarea.value: 'Converting quote to Markdown...'
 
       html: html.replace(/<!--.+-->/, '').trim()
-      html: "<blockquote><strong><a href='/users/$userId'>$username</a></strong>&nbsp;
-            <a href='#posts-$postId'>wrote</a>:<br />$html</blockquote>"
+      html: "<blockquote><strong><a href='/users/$userId'>$username</a></strong>" +
+            "&nbsp;<a href='#posts-$postId'>wrote</a>:<br />$html</blockquote>"
 
       html: modify html if modify
 
