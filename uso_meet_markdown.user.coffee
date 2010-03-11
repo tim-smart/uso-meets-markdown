@@ -129,7 +129,7 @@
                        'This post contained spam.'
       reportHtml: "<p>I believe the user <a href='/users/$@userId'>$@userName</a> has
                   made an inappropiate <a href='${location.pathname + location.search}#post-body-$@id'>post</a>
-                  in <a href='$location.pathname'>this topic</a>.</p>"
+                  in the topic <a href='$location.pathname'>$page.title</a>.</p>"
       if not comments
         return
       else if '' isnt comments

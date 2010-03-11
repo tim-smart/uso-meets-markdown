@@ -102,7 +102,7 @@ then passes it to the editor 'insertQuote' function</p>             </td>       
                        <span class="s1">&#39;This post contained spam.&#39;</span>
       <span class="nv">reportHtml: </span><span class="s2">&quot;&lt;p&gt;I believe the user &lt;a href=&#39;/users/$@userId&#39;&gt;$@userName&lt;/a&gt; has</span>
 <span class="s2">                  made an inappropiate &lt;a href=&#39;${location.pathname + location.search}#post-body-$@id&#39;&gt;post&lt;/a&gt;</span>
-<span class="s2">                  in &lt;a href=&#39;$location.pathname&#39;&gt;this topic&lt;/a&gt;.&lt;/p&gt;&quot;</span>
+<span class="s2">                  in the topic &lt;a href=&#39;$location.pathname&#39;&gt;$page.title&lt;/a&gt;.&lt;/p&gt;&quot;</span>
       <span class="k">if</span> <span class="o">not</span> <span class="nx">comments</span>
         <span class="k">return</span>
       <span class="k">else</span> <span class="k">if</span> <span class="s1">&#39;&#39;</span> <span class="o">isnt</span> <span class="nx">comments</span>
