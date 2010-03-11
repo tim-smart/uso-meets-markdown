@@ -114,12 +114,12 @@
             break
           element: element.parentNode
         if properSelection
-          range: range.cloneContents()
+          fragment: range.cloneContents()
           holder: document.createElement 'div'
-          holder.appendChild range
+          holder.appendChild fragment
           html: holder.innerHTML
           range.detach()
-          holder: range: null
+          holder: range: fragment: null
         else html: @body
       page.editor.insertQuote html, @userName, @userId, @id
 
