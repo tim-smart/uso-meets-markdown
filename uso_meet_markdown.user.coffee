@@ -11,6 +11,11 @@
 # @require        http://updater.usotools.co.cc/70901.js
 # ==/UserScript==
 
+# Some ideas in this script originated from SizzleMcTwizzle's comment fix script: 
+# http://userscripts.org/script/show/24464
+#
+# Kudos to him!
+
 # Anonymous function wrapper, so we don't step on anyones toes
 (->
 
@@ -38,35 +43,59 @@
 
       if not linkCont
         linkCont: document.createElement 'p'
-        authorCont.getElementsByClassName('role')[0].
-                   appendChild linkCont
+        authorCont.insertBefore linkCont,
+                                authorCont.getElementsByClassName('useragent')[0]
 
       @id: /\d+$/.exec(@element.id)[0]
       @userId: nameLink.getAttribute 'user_id'
       @userName: nameLink.textContent
       @userHref: nameLink.href
       @body: @element.getElementsByClassName('body')[0].
-                  innerHTML
+                      innerHTML
+
+      @belongsToUser: if authorCont.getElementsByClassName('edit')[0]
+        true
+      else false
 
       # Insert the quote link
+      @insertUtility 'Quote', linkCont, =>
+        @quote()
+
+      # Insert the Report link, depending if the post
+      # belongs to the current user or not
+      if not @belongsToUser
+        @insertUtility 'Report', linkCont, (event) =>
+          @report(event)
+
+    # Shortcut for inserting a utility link into the post
+    # author section. cont is an optional container, to save
+    # looking for it again
+    insertUtility: (name, cont, callback) ->
+      if 'function' is typeof cont
+        callback: cont
+        cont: null
+
       span: document.createElement 'span'
       span.style.display: 'block'
       span.className: 'edit'
 
-      quote: document.createElement 'a'
-      quote.style.fontSize: '12px'
-      quote.textContent: 'Quote'
-      quote.href: '#'
-      quote.className: 'utility'
-      span.appendChild quote
-
-      linkCont.appendChild span
-
-      # Set-up quote listeners
-      quote.addEventListener('click', ((event) =>
+      link: document.createElement 'a'
+      link.style.fontSize: '12px'
+      link.textContent: name
+      link.href: '#'
+      link.className: 'utility'
+      link.addEventListener('click', ((event) ->
         event.preventDefault()
-        @quote()
+        callback(event)
       ), false)
+
+      span.appendChild link
+      if not cont
+        @element.getElementsByClassName('author')[0].
+                 getElementsByTagName('p')[0].
+                 appendChild span
+      else
+        cont.appendChild span
 
     # This post function takes either a selection, or the entire post body,
     # then passes it to the editor 'insertQuote' function
@@ -94,8 +123,28 @@
       page.editor.insertQuote html, @userName, @userId, @id
 
     # This function will report the post as spam, to the USO spam topic
-    report: ->
-      true
+    report: (event) ->
+      comments: prompt 'Do you want to mention any specific details about the offender?',
+                       'This post contained spam.'
+      reportHtml: "<p>I believe the user <a href='/users/$@userId'>$@userName</a> has
+                  made an inappropiate <a href='${location.pathname + location.search}#post-body-$@id'>post</a>
+                  in <a href='$location.pathname'>this topic</a>.</p>"
+      if not comments
+        return
+      else if '' isnt comments
+        reportHtml += "<p>$comments</p>"
+
+      GM_xmlhttpRequest {
+        url: "http://$location.host/topics/9/posts"
+        method: 'POST'
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        data: "authenticity_token=${encodeURIComponent unsafeWindow.auth_token}&post%5Bbody%5D=" +
+              "${encodeURIComponent reportHtml}&commit=Post+reply"
+        onload: ->
+          event.target.textContent: 'Reported!'
+      }
 
   #### Guide class
   # Represents a guide on Userscripts.org
@@ -197,10 +246,8 @@
       @textarea.value: 'Converting quote to Markdown...'
 
       html: html.replace(/<!--.+-->/, '').trim()
-      html: '<blockquote><strong><a href="/users/' + userId + '">' +
-            username + '</a></strong>&nbsp;' +
-            '<a href="#' + postId + '">wrote</a>:<br />' +
-            html + '</blockquote>'
+      html: "<blockquote><strong><a href='/users/$userId'>$username</a></strong>&nbsp;
+            <a href='#posts-$postId'>wrote</a>:<br />$html</blockquote>"
 
       html: modify html if modify
 
@@ -229,7 +276,6 @@
     #
     # * Nothing yet!
     addShortcuts: (textarea) ->
-      textarea
 
   #### Page class
   # Represents a page on USO, depending on the URI. It will add all
@@ -244,6 +290,7 @@
 
     comments: []
     editor: null
+    title: document.title
 
     # Set-up page from a standard topic.
     initFromTopic: ->
@@ -253,6 +300,9 @@
 
       for post in postElements
         @comments.push new Post @, post
+
+      @title: document.getElementById('topic-title').firstChild.
+                       textContent.trim().replace /\s+/g, ' '
 
 
   #### Parsing functions
@@ -280,23 +330,6 @@
   # Takes a string of markdown, and parses it to html
   markdownToHtml: (markdown) ->
     showdown.makeHtml markdown
-
-  #### Helper functions
-  # A few helper functions that break us away from browser-incompatibility
-  # and RSI.
-
-  # GM_addStyle, a drop in replacement for the original GM_addStyle
-  # when it doesn't exist
-  if 'function' isnt typeof GM_addStyle
-    GM_addStyle: (css) ->
-      head: document.getElementsByTagName('head')[0]
-      style: document.createElement 'style'
-      style.textContent: css
-      head.appendChild style
-
-  # Make sure unsafeWindow is all g
-  `unsafeWindow = 'object' !== typeof unsafeWindow ? window : unsafeWindow`
-
 
   # Finally start setting up page
   page: new Page()
