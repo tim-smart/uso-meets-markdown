@@ -118,6 +118,7 @@
           holder: document.createElement 'div'
           holder.appendChild range
           html: holder.innerHTML
+          range.detach()
           holder: range: null
         else html: @body
       page.editor.insertQuote html, @userName, @userId, @id
