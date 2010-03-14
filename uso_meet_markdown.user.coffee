@@ -177,7 +177,7 @@
         @element: document.getElementById 'edit'
         @modifyEntryContainer @element
 
-        @textarea: document.getElementById 'edit_post_body'
+        textarea: @textarea: document.getElementById 'edit_post_body'
         @textarea.disabled: true
 
         # Pop back into the sandbox scope, so the leak check
@@ -191,13 +191,10 @@
 
           # Modify the submit button to convert the textarea
           # content before sending it off to USO
-          form: @element.getElementsByTagName('form')[0]
-          form.elements[3].type: 'button'
-          form.elements[3].addEventListener('click', ( =>
-            @textarea.value: markdownToHtml @textarea.value
-            unsafeWindow.document.getElementById('edit').
-                                  getElementsByTagName('form')[0].
-                                  submit()
+          @element.getElementsByTagName('form')[0].
+                         elements[3].
+                         addEventListener('click', ( =>
+             textarea.value: markdownToHtml textarea.value
           ), false)
           @textarea.value: 'Converting to markdown...'
         ), 0)
@@ -210,12 +207,10 @@
       form: @element.getElementsByTagName('form')[0]
       textarea: document.getElementById 'post_body'
 
-      form.elements[2].type: 'button'
-      form.elements[2].addEventListener('click', ( ->
-        textarea.value: markdownToHtml textarea.value
-        unsafeWindow.document.getElementById('reply').
-                              getElementsByTagName('form')[0].
-                              submit()
+      @element.getElementsByTagName('form')[0].
+                     elements[2].
+                     addEventListener('click', ( =>
+         textarea.value: markdownToHtml textarea.value
       ), false)
       @addShortcuts textarea
 
