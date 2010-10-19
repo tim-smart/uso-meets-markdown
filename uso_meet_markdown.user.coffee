@@ -16,318 +16,317 @@
 #
 # Kudos to him!
 
-# Anonymous function wrapper, so we don't step on anyones toes
-(->
 
-  #### Post class
-  # This class represents a post on Userscripts.org, usually found in a topic
-  class Post
-    constructor: (page, element) ->
-      @page: page
-      @element: element
+#### Post class
+# This class represents a post on Userscripts.org, usually found in a topic
+class Post
+  constructor: (page, element) ->
+    @page    = page
+    @element = element
 
-      if 'TR' is @element.nodeName
-        @initFromTopic()
-      else if 'DIV' is @element.nodeName
-        @initFromGuide()
+    if 'TR' is @element.nodeName
+      @initFromTopic()
+    else if 'DIV' is @element.nodeName
+      @initFromGuide()
 
-    element: null
+  element: null
 
-    # We are currently in a guide, attach listeners, grab post info etc
-    # and populate the Post instance with data
-    initFromTopic: ->
-      authorCont: @element.getElementsByClassName('author')[0]
-      nameLink: authorCont.getElementsByClassName('fn')[0].
-                           getElementsByTagName('a')[0]
-      linkCont: authorCont.getElementsByTagName('p')[0]
+  # We are currently in a guide, attach listeners, grab post info etc
+  # and populate the Post instance with data
+  initFromTopic: ->
+    authorCont = @element.getElementsByClassName('author')[0]
+    nameLink   = authorCont.getElementsByClassName('fn')[0].
+                            getElementsByTagName('a')[0]
+    linkCont   = authorCont.getElementsByTagName('p')[0]
 
-      if not linkCont
-        linkCont: document.createElement 'p'
-        authorCont.insertBefore linkCont,
-                                authorCont.getElementsByClassName('useragent')[0]
+    if not linkCont
+      linkCont = document.createElement 'p'
+      authorCont.insertBefore linkCont,
+                              authorCont.getElementsByClassName('useragent')[0]
 
-      @id: /\d+$/.exec(@element.id)[0]
-      @userId: nameLink.getAttribute 'user_id'
-      @userName: nameLink.textContent
-      @userHref: nameLink.href
-      @body: @element.getElementsByClassName('body')[0].
-                      innerHTML
+    @id       = /\d+$/.exec(@element.id)[0]
+    @userId   = nameLink.getAttribute 'user_id'
+    @userName = nameLink.textContent
+    @userHref = nameLink.href
+    @body     = @element.getElementsByClassName('body')[0].
+                    innerHTML
 
-      @belongsToUser: if authorCont.getElementsByClassName('edit')[0]
-        true
-      else false
+    @belongsToUser = if authorCont.getElementsByClassName('edit')[0]
+      true
+    else false
 
-      # Insert the quote link
-      @insertUtility 'Quote', linkCont, =>
-        @quote()
+    # Insert the quote link
+    @insertUtility 'Quote', linkCont, =>
+      @quote()
 
-      # Insert the Report link, depending if the post
-      # belongs to the current user or not
-      if not @belongsToUser
-        @insertUtility 'Report', linkCont, (event) =>
-          @report(event)
+    # Insert the Report link, depending if the post
+    # belongs to the current user or not
+    if not @belongsToUser
+      @insertUtility 'Report', linkCont, (event) =>
+        @report event
 
-    # Shortcut for inserting a utility link into the post
-    # author section. cont is an optional container, to save
-    # looking for it again
-    insertUtility: (name, cont, callback) ->
-      if 'function' is typeof cont
-        callback: cont
-        cont: null
+  # Shortcut for inserting a utility link into the post
+  # author section. cont is an optional container, to save
+  # looking for it again
+  insertUtility: (name, cont, callback) ->
+    if 'function' is typeof cont
+      callback = cont
+      cont     = null
 
-      span: document.createElement 'span'
-      span.style.display: 'block'
-      span.className: 'edit'
+    span               = document.createElement 'span'
+    span.style.display = 'block'
+    span.className     = 'edit'
 
-      link: document.createElement 'a'
-      link.style.fontSize: '12px'
-      link.textContent: name
-      link.href: '#'
-      link.className: 'utility'
-      link.addEventListener('click', ((event) ->
-        event.preventDefault()
-        callback(event)
-      ), false)
+    link                = document.createElement 'a'
+    link.style.fontSize = '12px'
+    link.textContent    = name
+    link.href           = '#'
+    link.className      = 'utility'
 
-      span.appendChild link
-      if not cont
-        @element.getElementsByClassName('author')[0].
-                 getElementsByTagName('p')[0].
-                 appendChild span
-      else
-        cont.appendChild span
+    link.addEventListener('click', (event) ->
+      event.preventDefault()
+      callback event
+    , false)
+    span.appendChild link
 
-    # This post function takes either a selection, or the entire post body,
-    # then passes it to the editor 'insertQuote' function
-    quote: ->
-      selection: window.getSelection()
-      html: ''
-      if '' is selection.toString()
-        html: @body
-      else
-        range: selection.getRangeAt(0)
-        element: range.commonAncestorContainer
-        while (element)
-          if 'TD' is element.nodeName and 0 is element.id.indexOf 'post-body-'
-            if 'post-body-' + @id is element.id
-              properSelection: true
-            break
-          element: element.parentNode
-        if properSelection
-          fragment: range.cloneContents()
-          holder: document.createElement 'div'
-          holder.appendChild fragment
-          html: holder.innerHTML
-          range.detach()
-          holder: range: fragment: null
-        else html: @body
-      page.editor.insertQuote html, @userName, @userId, @id
+    if not cont
+      @element.getElementsByClassName('author')[0].
+               getElementsByTagName('p')[0].
+               appendChild span
+    else
+      cont.appendChild span
 
-    # This function will report the post as spam, to the USO spam topic
-    report: (event) ->
-      comments: prompt 'Do you want to mention any specific details about the offender?',
-                       'This post contained spam.'
-      reportHtml: "<p>I believe the user <a href='/users/$@userId'>$@userName</a> has
-                  made an inappropiate <a href='${location.pathname + location.search}#post-body-$@id'>post</a>
-                  in the topic <a href='$location.pathname'>$page.title</a>.</p>"
-      if not comments
-        return
-      else if '' isnt comments
-        reportHtml += "<p>$comments</p>"
+  # This post function takes either a selection, or the entire post body,
+  # then passes it to the editor 'insertQuote' function
+  quote: ->
+    selection = window.getSelection()
+    html      = ''
 
-      GM_xmlhttpRequest {
-        url: "http://$location.host/topics/9/posts"
-        method: 'POST'
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-        data: "authenticity_token=${encodeURIComponent unsafeWindow.auth_token}&post%5Bbody%5D=" +
-              "${encodeURIComponent reportHtml}&commit=Post+reply"
-        onload: ->
-          event.target.textContent: 'Reported!'
-      }
+    if '' is selection.toString()
+      html = @body
+    else
+      range   = selection.getRangeAt(0)
+      element = range.commonAncestorContainer
+      while element
+        if 'TD' is element.nodeName and 0 is element.id.indexOf 'post-body-'
+          if 'post-body-' + @id is element.id
+            properSelection = true
+          break
+        element = element.parentNode
 
-  #### Guide class
-  # Represents a guide on Userscripts.org
-  class Guide
-    constructor: (page, element) ->
-      @page: page
+      if properSelection
+        fragment = range.cloneContents()
+        holder   = document.createElement 'div'
+        holder.appendChild fragment
 
-  #### Editor class
-  # Represents the current editor in the page
-  class Editor
-    constructor: (page, element) ->
-      @page: page
-      @element: element
+        html = holder.innerHTML
+        range.detach()
 
-      if 'DIV' is element.nodeName
-        @initFromReply()
+        holder = range = fragment = null
+      else html = @body
+    page.editor.insertQuote html, @userName, @userId, @id
 
-    element: null
+  # This function will report the post as spam, to the USO spam topic
+  report: (event) ->
+    comments   = prompt 'Do you want to mention any specific details about the offender?',
+                        'This post contained spam.'
 
-    # Here we modify the reply box, and over-ride a function on the USO
-    # page that gets called on a edit operation
-    initFromReply: ->
-      oldSetReplyId: unsafeWindow.EditForm.setReplyId
+    reportHtml = "<p>I believe the user <a href='/users/#{@userId}'>#{@userName}</a> has
+                made an inappropiate <a href='#{location.pathname + location.search}#post-body-#{@id}'>post</a>
+                in the topic <a href='#{location.pathname}'>#{page.title}</a>.</p>"
 
-      # Practically this is the 'onPostEdit' listener
-      unsafeWindow.EditForm.setReplyId: =>
-        oldSetReplyId.apply unsafeWindow.EditForm, arguments
+    if not comments
+      return
+    else if '' isnt comments
+      reportHtml += "<p>#{comments}</p>"
 
-        @element: document.getElementById 'edit'
-        @modifyEntryContainer @element
+    GM_xmlhttpRequest
+      url:    "http://#{location.host}/topics/9/posts"
+      method: 'POST'
+      headers:
+        'Content-Type': 'application/x-www-form-urlencoded'
+      data:   "authenticity_token=#{encodeURIComponent unsafeWindow.auth_token}&post%5Bbody%5D=" +
+              "#{encodeURIComponent reportHtml}&commit=Post+reply"
+      onload: ->
+        event.target.textContent = 'Reported!'
 
-        textarea: @textarea: document.getElementById 'edit_post_body'
-        @textarea.disabled: true
+#### Guide class
+# Represents a guide on Userscripts.org
+class Guide
+  constructor: (page, element) ->
+    @page = page
 
-        # Pop back into the sandbox scope, so the leak check
-        # doesn't throw any access violation errors
-        window.setTimeout(( =>
-          # Convert the HTML to Markdown
-          htmlToMarkdown @textarea.value, (markdown) =>
-            if @textarea and @element
-              @textarea.value: markdown
-              @textarea.disabled: false
+#### Editor class
+# Represents the current editor in the page
+class Editor
+  constructor: (page, element) ->
+    @page = page
+    @element = element
 
-          # Modify the submit button to convert the textarea
-          # content before sending it off to USO
-          @element.getElementsByTagName('form')[0].
-                         elements[3].
-                         addEventListener('click', ( =>
-             textarea.value: markdownToHtml textarea.value
-          ), false)
-          @textarea.value: 'Converting to markdown...'
-        ), 0)
+    if 'DIV' is element.nodeName
+      @initFromReply()
 
-        @addShortcuts @textarea
+  element: null
 
-      # For the normal reply box
+  # Here we modify the reply box, and over-ride a function on the USO
+  # page that gets called on a edit operation
+  initFromReply: ->
+    oldSetReplyId = unsafeWindow.EditForm.setReplyId
+
+    # Practically this is the 'onPostEdit' listener
+    unsafeWindow.EditForm.setReplyId = =>
+      oldSetReplyId.apply unsafeWindow.EditForm, arguments
+
+      @element = document.getElementById 'edit'
       @modifyEntryContainer @element
 
-      form: @element.getElementsByTagName('form')[0]
-      textarea: document.getElementById 'post_body'
+      textarea = @textarea = document.getElementById 'edit_post_body'
+      @textarea.disabled   = true
 
-      @element.getElementsByTagName('form')[0].
-                     elements[2].
-                     addEventListener('click', ( =>
-         textarea.value: markdownToHtml textarea.value
-      ), false)
-      @addShortcuts textarea
+      # Pop back into the sandbox scope, so the leak check
+      # doesn't throw any access violation errors
+      window.setTimeout(=>
+        # Convert the HTML to Markdown
+        htmlToMarkdown @textarea.value, (markdown) =>
+          if @textarea and @element
+            @textarea.value    = markdown
+            @textarea.disabled = false
 
-      oldReplyInit: unsafeWindow.ReplyForm.init
-      unsafeWindow.ReplyForm.init: =>
-        oldReplyInit.call unsafeWindow.ReplyForm
-        @element: document.getElementById 'reply'
-        @textarea: document.getElementById 'post_body'
+        # Modify the submit button to convert the textarea
+        # content before sending it off to USO
+        @element.getElementsByTagName('form')[0].
+                 elements[3].
+                 addEventListener('click', =>
+           textarea.value = markdownToHtml textarea.value
+        , false)
+        @textarea.value = 'Converting to markdown...'
+      , 0)
 
-      @element: null
+      @addShortcuts @textarea
 
-    # This function takes a reply 'containter' div, and chops and changes
-    # it to our liking
-    modifyEntryContainer: (element) ->
-      element.getElementsByTagName('h5')[1].
-              textContent: 'Use Markdown to format your reply.'
+    # For the normal reply box
+    @modifyEntryContainer @element
 
-    # This function takes html, the User-Name, a User ID and a post ID,
-    # converts it to markdown, then inserts the
-    # resulting quote into the current textarea
-    insertQuote: (html, username, userId, postId) ->
-      if @ensureElement()
-        previous: markdownToHtml @textarea.value
+    form     = @element.getElementsByTagName('form')[0]
+    textarea = document.getElementById 'post_body'
 
-        modify: (html) ->
-          previous + html
+    @element.getElementsByTagName('form')[0].
+             elements[2].
+             addEventListener('click', =>
+       textarea.value = markdownToHtml textarea.value
+    , false)
+    @addShortcuts textarea
 
-      @textarea.disabled: true
-      @textarea.value: 'Converting quote to Markdown...'
+    oldReplyInit = unsafeWindow.ReplyForm.init
+    unsafeWindow.ReplyForm.init = =>
+      oldReplyInit.call unsafeWindow.ReplyForm
+      @element  = document.getElementById 'reply'
+      @textarea = document.getElementById 'post_body'
 
-      html: html.replace(/<!--.+-->/, '').trim()
-      html: "<blockquote><strong><a href='/users/$userId'>$username</a></strong>" +
-            "&nbsp;<a href='#posts-$postId'>wrote</a>:<br />$html</blockquote>"
+    @element = null
 
-      html: modify html if modify
+  # This function takes a reply 'containter' div, and chops and changes
+  # it to our liking
+  modifyEntryContainer: (element) ->
+    element.getElementsByTagName('h5')[1]
+           .textContent = 'Use Markdown to format your reply.'
 
-      htmlToMarkdown html, (markdown) =>
-        @textarea.value: markdown
-        @textarea.disabled: false
+  # This function takes html, the User-Name, a User ID and a post ID,
+  # converts it to markdown, then inserts the
+  # resulting quote into the current textarea
+  insertQuote: (html, username, userId, postId) ->
+    if @ensureElement()
+      previous = markdownToHtml @textarea.value
+      modify   = (html) ->
+        previous + html
 
-    # This is used by the insertQuote function to see whether we are currently
-    # in a reply or not. If we are not in a reply, it will open a reply box. If
-    # we are in a edit or reply, it just returns true
-    ensureElement: ->
-      if not @element
-        @openReply()
-        false
-      else if 'none' is @element.style.display
-        @openReply()
-        false
-      else
-        true
+    @textarea.disabled = true
+    @textarea.value    = 'Converting quote to Markdown...'
 
-    # Opens the reply box, simple.
-    openReply: ->
-      unsafeWindow.ReplyForm.init()
+    html = html.replace(/<!--.+-->/, '').trim()
+    html = "<blockquote><strong><a href='/users/#{userId}'>#{username}</a></strong>" +
+           "&nbsp;<a href='#posts-#{postId}'>wrote</a>:<br />#{html}</blockquote>"
 
-    # Adds the follow keyboard shortcuts
-    #
-    # * Nothing yet!
-    addShortcuts: (textarea) ->
+    html = modify html if modify
 
-  #### Page class
-  # Represents a page on USO, depending on the URI. It will add all
-  # the necessary listeners, insert all the elements, construct all the posts,
-  # the guide if necessary, and generally all the other stuff I missed
-  class Page
-    init: ->
-      path: location.pathname
+    htmlToMarkdown html, (markdown) =>
+      @textarea.value = markdown
+      @textarea.disabled = false
 
-      if 0 is path.indexOf '/topics'
-        @initFromTopic()
+  # This is used by the insertQuote function to see whether we are currently
+  # in a reply or not. If we are not in a reply, it will open a reply box. If
+  # we are in a edit or reply, it just returns true
+  ensureElement: ->
+    if not @element
+      @openReply()
+      false
+    else if 'none' is @element.style.display
+      @openReply()
+      false
+    else
+      true
 
-    comments: []
-    editor: null
-    title: document.title
+  # Opens the reply box, simple.
+  openReply: ->
+    unsafeWindow.ReplyForm.init()
 
-    # Set-up page from a standard topic.
-    initFromTopic: ->
-      postElements: document.getElementsByClassName 'post'
+  # Adds the follow keyboard shortcuts
+  #
+  # * Nothing yet!
+  addShortcuts: (textarea) ->
 
-      @editor: new Editor @, document.getElementById 'reply'
+#### Page class
+# Represents a page on USO, depending on the URI. It will add all
+# the necessary listeners, insert all the elements, construct all the posts,
+# the guide if necessary, and generally all the other stuff I missed
+class Page
+  init: ->
+    path = location.pathname
 
-      for post in postElements
-        @comments.push new Post @, post
+    if 0 is path.indexOf '/topics'
+      @initFromTopic()
 
-      @title: document.getElementById('topic-title').firstChild.
-                       textContent.trim().replace /\s+/g, ' '
+  comments: []
+  editor:   null
+  title:    document.title
+
+  # Set-up page from a standard topic.
+  initFromTopic: ->
+    postElements = document.getElementsByClassName 'post'
+
+    @editor = new Editor @, document.getElementById 'reply'
+
+    for post in postElements
+      @comments.push new Post @, post
+
+    @title = document.getElementById('topic-title').firstChild.
+                      textContent.trim().replace /\s+/g, ' '
 
 
-  #### Parsing functions
+#### Parsing functions
 
-  # A instance of showdown
-  showdown: new Showdown.converter()
+# A instance of showdown
+showdown = new Showdown.converter()
 
-  # Takes a string of html, and parses it to markdown using
-  # http://github.com/Tim-Smart/usotools-markdownify
-  htmlToMarkdown: (html, callback) ->
-    GM_xmlhttpRequest {
-      method: 'POST'
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-      url: 'http://www.usotools.co.cc/markdown/'
-      data: 'html=' + encodeURIComponent html
-      onload: (xhr) ->
-        textarea: document.createElement 'textarea'
-        textarea.innerHTML: xhr.responseText
-        callback textarea.value
-        textarea: null
-    }
+# Takes a string of html, and parses it to markdown using
+# http://github.com/Tim-Smart/usotools-markdownify
+htmlToMarkdown = (html, callback) ->
+  GM_xmlhttpRequest
+    method: 'POST'
+    headers:
+      'Content-Type': 'application/x-www-form-urlencoded'
+    url:    'http://www.usotools.co.cc/markdown/'
+    data:   'html=' + encodeURIComponent html
+    onload: (xhr) ->
+      textarea           = document.createElement 'textarea'
+      textarea.innerHTML = xhr.responseText
+      callback textarea.value
+      textarea           = null
 
-  # Takes a string of markdown, and parses it to html
-  markdownToHtml: (markdown) ->
-    showdown.makeHtml markdown
+# Takes a string of markdown, and parses it to html
+markdownToHtml = (markdown) ->
+  showdown.makeHtml markdown
 
-  # Finally start setting up page
-  page: new Page()
-  page.init()
-)()
+# Finally start setting up page
+page = new Page()
+page.init()
